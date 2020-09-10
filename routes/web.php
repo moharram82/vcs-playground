@@ -18,3 +18,9 @@ Route::get('/', function () {
 });
 
 Auth::routes();
+
+Route::group(['middleware' => ['auth']], function () {
+    Route::resource('profile', 'App\Http\Controllers\ProfileController')->only(['show', 'edit', 'update']);
+    Route::resource('article', 'App\Http\Controllers\ArticleController');
+    Route::resource('author', 'App\Http\Controllers\AuthorController');
+});
