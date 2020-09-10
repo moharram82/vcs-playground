@@ -37,4 +37,11 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function scopeFriendOf(Builder $query, $friendId)
+    {
+        $query->whereHas('friend', function (Builder $q) use ($friendId) {
+            $q->where('requester_id', $friendId)->orWhere('invited_id', $friendId);
+        });
+    }
 }
