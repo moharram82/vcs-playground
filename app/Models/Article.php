@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Article extends Model
 {
+    use HasFactory;
+
     /**
      * The table associated with the model.
      *
@@ -61,6 +64,11 @@ class Article extends Model
         $query->where('is_published', 1);
     }
 
+    public function scopeUnpublished(Builder $query)
+    {
+        $query->where('is_published', 0);
+    }
+
     public function scopeOwnedBy(Builder $query, $ownerId)
     {
         $query->where('user_id', $ownerId);
@@ -71,7 +79,7 @@ class Article extends Model
         $query->has('comments', '>', $amount);
     }
 
-    public function scopeCommentContains(Builder $query, $term)
+    public function scopeHasCommentContains(Builder $query, $term)
     {
         $query->whereHas('comments', function (Builder $q) use ($term) {
             $q->where('body', 'like', '%' . $term . '%');
