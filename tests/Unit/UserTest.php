@@ -67,13 +67,12 @@ class UserTest extends TestCase
     }
 
     /** @test */
-    public function getting_requested_friends()
+    public function invited_friends_are_friends_who_invited_to_join_friendship()
     {
         $user = User::factory()->create();
-        $requestedFriends = User::factory()->count(5)->create();
-        $notAFriendRequested = User::factory()->create();
-        $notAFriendInvitedBy = User::factory()->create();
-        $requestedFriends->each(
+        $invitedFriends = User::factory()->count(5)->create();
+        $notAnInvitedFriend = User::factory()->create();
+        $invitedFriends->each(
             function ($friend) use ($user) {
                 Friend::factory()->accepted()->create(
                     [
@@ -86,47 +85,29 @@ class UserTest extends TestCase
 
         Friend::factory()->accepted()->create(
             [
-                'requester_id' => $notAFriendRequested->id,
+                'requester_id' => $notAnInvitedFriend->id,
             ]
         );
 
-        Friend::factory()->accepted()->create(
-            [
-                'invited_id' => $notAFriendInvitedBy->id,
-            ]
-        );
+        $invitedFriendsFound = $user->invitedFriends;
 
-        $requestedFriendsFound = $user->requestedFriends;
-        $invitedByFriendsFound = $user->invitedByFriends;
-        $friends = $user->friends;
+        $this->assertEquals(5, $invitedFriendsFound->count());
 
-        $this->assertEquals(5, $requestedFriendsFound->count());
-        $this->assertEquals(0, $invitedByFriendsFound->count());
-
-        $requestedFriendsFound->each(
-            function ($friend) use ($requestedFriends, $friends) {
-                $this->assertTrue($requestedFriends->contains($friend));
-                $this->assertTrue($friends->contains($friend));
+        $invitedFriendsFound->each(
+            function ($friend) use ($invitedFriends) {
+                $this->assertTrue($invitedFriends->contains($friend));
             }
         );
 
-        $invitedByFriendsFound->each(
-            function ($friend) use ($friends) {
-                $this->assertTrue($friends->contains($friend));
-            }
-        );
-
-        $this->assertFalse($invitedByFriendsFound->contains($notAFriendRequested));
-        $this->assertFalse($requestedFriendsFound->contains($notAFriendInvitedBy));
+        $this->assertFalse($invitedFriendsFound->contains($notAnInvitedFriend));
     }
 
     /** @test */
-    public function getting_invited_by_friends()
+    public function invited_by_friends_are_friends_who_requests_friendship()
     {
         $user = User::factory()->create();
         $invitedByFriends = User::factory()->count(5)->create();
-        $notAFriendRequested = User::factory()->create();
-        $notAFriendInvitedBy = User::factory()->create();
+        $notAnInvitedByFriend = User::factory()->create();
         $invitedByFriends->each(
             function ($friend) use ($user) {
                 Friend::factory()->accepted()->create(
@@ -140,45 +121,29 @@ class UserTest extends TestCase
 
         Friend::factory()->accepted()->create(
             [
-                'requester_id' => $notAFriendRequested->id,
-            ]
-        );
-
-        Friend::factory()->accepted()->create(
-            [
-                'invited_id' => $notAFriendInvitedBy->id,
+                'invited_id' => $notAnInvitedByFriend->id,
             ]
         );
 
         $invitedByFriendsFound = $user->invitedByFriends;
-        $requestedFriendsFound = $user->requestedFriends;
-        $friends = $user->friends;
 
         $this->assertEquals(5, $invitedByFriendsFound->count());
-        $this->assertEquals(0, $requestedFriendsFound->count());
 
         $invitedByFriendsFound->each(
-            function ($friend) use ($invitedByFriends, $friends) {
+            function ($friend) use ($invitedByFriends) {
                 $this->assertTrue($invitedByFriends->contains($friend));
-                $this->assertTrue($friends->contains($friend));
             }
         );
 
-        $requestedFriendsFound->each(
-            function ($friend) use ($friends) {
-                $this->assertTrue($friends->contains($friend));
-            }
-        );
-
-        $this->assertFalse($invitedByFriendsFound->contains($notAFriendRequested));
-        $this->assertFalse($requestedFriendsFound->contains($notAFriendInvitedBy));
+        $this->assertFalse($invitedByFriendsFound->contains($notAnInvitedByFriend));
     }
 
     /** @test */
-    public function getting_friend_requests_sent()
+    public function sent_friend_requests_are_requests_where_user_requests_friendship()
     {
         $user = User::factory()->create();
-        $requestsSent = Friend::factory()
+        $otherUser = User::factory()->create();
+        $sentFriendRequests = Friend::factory()
             ->request()
             ->count(5)
             ->create(
@@ -186,40 +151,35 @@ class UserTest extends TestCase
                     'requester_id' => $user->id,
                 ]
             );
-        $otherRequest = Friend::factory()->request()->create();
+        $otherUserRequest = Friend::factory()->request()->create(
+            [
+                'requester_id' => $otherUser->id,
+            ]
+        );
 
-        $requestsSentFound = $user->friendRequestsSent;
-        $requestsReceivedFound = $user->friendRequestsReceived;
-        $requests = $user->requests;
+        $sentFriendRequestsFound = $user->sentFriendRequests;
 
-        $this->assertEquals(5, $requestsSentFound->count());
-        $this->assertEquals(0, $requestsReceivedFound->count());
+        $this->assertEquals(5, $sentFriendRequestsFound->count());
 
-        $requestsSentFound->each(
-            function ($request) use ($requestsSent, $requests) {
-                $this->assertTrue($requestsSent->contains($request->user));
-                $this->assertTrue($requests->contains($request));
+        $sentFriendRequestsFound->each(
+            function ($request) use ($sentFriendRequests) {
+                $this->assertTrue($sentFriendRequests->contains($request->user));
             }
         );
 
-        $this->assertFalse($requestsSentFound->contains(
-            function ($request) use ($otherRequest) {
-                $this->assertFalse($otherRequest->is($request->user));
-            }
-        ));
-
-        $this->assertFalse($requests->contains(
-            function ($request) use ($otherRequest) {
-                $this->assertFalse($otherRequest->is($request->user));
+        $this->assertFalse($sentFriendRequestsFound->contains(
+            function ($request) use ($otherUserRequest) {
+                $this->assertFalse($otherUserRequest->is($request->user));
             }
         ));
     }
 
     /** @test */
-    public function getting_friend_requests_received()
+    public function received_friend_requests_are_requests_where_user_invited_to_join_friendship()
     {
         $user = User::factory()->create();
-        $requestsReceived = Friend::factory()
+        $otherUser = User::factory()->create();
+        $receivedFriendRequests = Friend::factory()
             ->request()
             ->count(5)
             ->create(
@@ -227,32 +187,120 @@ class UserTest extends TestCase
                     'invited_id' => $user->id,
                 ]
             );
-        $otherRequest = Friend::factory()->request()->create();
+        $otherUserRequest = Friend::factory()->request()->create(
+            [
+                'invited_id' => $otherUser->id,
+            ]
+        );
 
-        $requestsReceivedFound = $user->friendRequestsReceived;
-        $requestsSentFound = $user->friendRequestsSent;
-        $requests = $user->requests;
+        $receivedFriendRequestsFound = $user->receivedFriendRequests;
 
-        $this->assertEquals(5, $requestsReceivedFound->count());
-        $this->assertEquals(0, $requestsSentFound->count());
+        $this->assertEquals(5, $receivedFriendRequestsFound->count());
 
-        $requestsReceivedFound->each(
-            function ($request) use ($requestsReceived, $requests) {
-                $this->assertTrue($requestsReceived->contains($request->user));
-                $this->assertTrue($requests->contains($request));
+        $receivedFriendRequestsFound->each(
+            function ($request) use ($receivedFriendRequests) {
+                $this->assertTrue($receivedFriendRequests->contains($request->user));
             }
         );
 
-        $this->assertFalse($requestsReceivedFound->contains(
-            function ($request) use ($otherRequest) {
-                $this->assertFalse($otherRequest->is($request->user));
+        $this->assertFalse($receivedFriendRequestsFound->contains(
+            function ($request) use ($otherUserRequest) {
+                $this->assertFalse($otherUserRequest->is($request->user));
             }
         ));
+    }
+    
+    /** @test */
+    public function friends_includes_invited_friends_and_invited_by_friends()
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
 
-        $this->assertFalse($requests->contains(
-            function ($request) use ($otherRequest) {
-                $this->assertFalse($otherRequest->is($request->user));
-            }
-        ));
+        $invitedFriend = Friend::factory()->accepted()->create(
+            [
+                'requester_id' => $user->id,
+            ]
+        );
+
+        $invitedByFriend = Friend::factory()->accepted()->create(
+            [
+                'invited_id' => $user->id,
+            ]
+        );
+
+        $otherUserInvitedFriend = Friend::factory()->accepted()->create(
+            [
+                'requester_id' => $otherUser->id,
+            ]
+        );
+
+        $otherUserInvitedByFriend = Friend::factory()->accepted()->create(
+            [
+                'invited_id' => $otherUser->id,
+            ]
+        );
+
+        $friendsFound = $user->friends;
+
+        $this->assertTrue($friendsFound->contains(function ($friend) use ($invitedFriend) {
+            return $friend->id == $invitedFriend->invited_id;
+        }));
+        $this->assertTrue($friendsFound->contains(function ($friend) use ($invitedByFriend) {
+            return $friend->id == $invitedByFriend->requester_id;
+        }));
+
+        $this->assertFalse($friendsFound->contains(function ($friend) use ($otherUserInvitedFriend) {
+            return $friend->id == $otherUserInvitedFriend->invited_id;
+        }));
+        $this->assertFalse($friendsFound->contains(function ($friend) use ($otherUserInvitedByFriend) {
+            return $friend->id == $otherUserInvitedByFriend->requester_id;
+        }));
+    }
+
+    /** @test */
+    public function requests_includes_sent_and_received_friend_requests()
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $sentFriendRequest = Friend::factory()->request()->create(
+            [
+                'requester_id' => $user->id,
+            ]
+        );
+
+        $receivedFriendRequest = Friend::factory()->request()->create(
+            [
+                'invited_id' => $user->id,
+            ]
+        );
+
+        $otherUserSentFriendRequest = Friend::factory()->request()->create(
+            [
+                'requester_id' => $otherUser->id,
+            ]
+        );
+
+        $otherUserReceivedFriendRequest = Friend::factory()->request()->create(
+            [
+                'invited_id' => $otherUser->id,
+            ]
+        );
+
+        $requestsFound = $user->requests;
+
+        $this->assertTrue($requestsFound->contains(function ($friend) use ($sentFriendRequest) {
+            return $friend->id == $sentFriendRequest->invited_id;
+        }));
+        $this->assertTrue($requestsFound->contains(function ($friend) use ($receivedFriendRequest) {
+            return $friend->id == $receivedFriendRequest->requester_id;
+        }));
+
+        $this->assertFalse($requestsFound->contains(function ($friend) use ($otherUserSentFriendRequest) {
+            return $friend->id == $otherUserSentFriendRequest->invited_id;
+        }));
+        $this->assertFalse($requestsFound->contains(function ($friend) use ($otherUserReceivedFriendRequest) {
+            return $friend->id == $otherUserReceivedFriendRequest->requester_id;
+        }));
     }
 }
