@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Article extends Model
 {
@@ -20,6 +23,38 @@ class Article extends Model
      * @var array
      */
     protected $guarded = [];
+
+    /**
+     * Author of the article.
+     *
+     * @return BelongsTo
+     */
+    public function author() : BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Comments related to the article.
+     *
+     * @return HasMany
+     */
+    public function comments() : HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * Users liked the article.
+     *
+     * @return BelongsToMany
+     */
+    public function likes() : BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'likes')
+            ->as('likes')
+            ->withTimestamps();
+    }
 
     public function scopePublished(Builder $query)
     {

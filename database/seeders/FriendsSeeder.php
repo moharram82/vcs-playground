@@ -16,6 +16,7 @@ class FriendsSeeder extends Seeder
         $friends = [
             ['requester_id' => 1, 'invited_id' => 2, 'is_request' => true, 'accepted_at' => null],
             ['requester_id' => 2, 'invited_id' => 3, 'is_request' => false, 'accepted_at' => now()],
+            ['requester_id' => 1, 'invited_id' => 3, 'is_request' => false, 'accepted_at' => now()],
         ];
 
         foreach ($friends as $friend) {
