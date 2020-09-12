@@ -130,7 +130,7 @@ class ArticleTest extends TestCase
     }
 
     /** @test */
-    public function getting_articles_whit_comments_more_than_specific_amount()
+    public function getting_articles_with_comments_more_than_a_specific_amount()
     {
         $articleA = Article::factory()->create([]);
         $articleB = Article::factory()->create([]);
@@ -152,7 +152,7 @@ class ArticleTest extends TestCase
     }
 
     /** @test */
-    public function getting_articles_whit_specific_comment_body()
+    public function getting_articles_with_a_specific_comment_body()
     {
         $articleA = Article::factory()->create([]);
         $articleB = Article::factory()->create([]);
@@ -176,7 +176,7 @@ class ArticleTest extends TestCase
     }
 
     /** @test */
-    public function getting_articles_whit_likes_more_than_specific_amount()
+    public function getting_articles_with_likes_more_than_a_specific_amount()
     {
         $articleA = Article::factory()->create([]);
         $articleB = Article::factory()->create([]);
