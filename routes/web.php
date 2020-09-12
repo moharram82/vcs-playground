@@ -14,14 +14,20 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-//    dd(\App\Models\User::find(1)->friendOf);
     return view('home');
 });
 
 Auth::routes();
 
-Route::group(['middleware' => ['auth']], function () {
-    Route::resource('profile', 'App\Http\Controllers\ProfileController')->only(['show', 'edit', 'update']);
-    Route::resource('article', 'App\Http\Controllers\ArticleController');
-    Route::resource('author', 'App\Http\Controllers\AuthorController');
+Route::namespace('App\Http\Controllers')->middleware(['auth'])->group(function () {
+
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', 'ProfileController@index')->name('index');
+        Route::get('/edit', 'ProfileController@edit')->name('edit');
+        Route::put('/edit', 'ProfileController@update')->name('update');
+    });
+
+    Route::resource('articles', 'ArticleController');
+
+    Route::resource('authors', 'AuthorController')->only(['index', 'show']);
 });
