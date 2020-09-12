@@ -68,7 +68,7 @@ class User extends Authenticatable
      *
      * @return BelongsToMany
      */
-    public function friendsOfMine()
+    public function invitedFriends()
     {
         return $this->belongsToMany(User::class, 'friends', 'requester_id', 'invited_id')
             ->as('friendships')
@@ -81,7 +81,7 @@ class User extends Authenticatable
      *
      * @return BelongsToMany
      */
-    public function friendOf()
+    public function invitedByFriends()
     {
         return $this->belongsToMany(User::class, 'friends', 'invited_id', 'requester_id')
             ->as('friendships')
@@ -120,7 +120,7 @@ class User extends Authenticatable
      */
     private function mergeFriends()
     {
-        return $this->friendsOfMine->merge($this->friendOf);
+        return $this->invitedFriends->merge($this->invitedByFriends);
     }
 
     /**
@@ -128,7 +128,7 @@ class User extends Authenticatable
      *
      * @return BelongsToMany
      */
-    public function requestsOfMine()
+    public function sentFriendRequests()
     {
         return $this->belongsToMany(User::class, 'friends', 'requester_id', 'invited_id')
             ->as('requests')
@@ -141,7 +141,7 @@ class User extends Authenticatable
      *
      * @return BelongsToMany
      */
-    public function requestsToMe()
+    public function receivedFriendRequests()
     {
         return $this->belongsToMany(User::class, 'friends', 'invited_id', 'requester_id')
             ->as('requests')
@@ -180,6 +180,6 @@ class User extends Authenticatable
      */
     private function mergeRequests()
     {
-        return $this->requestsOfMine->merge($this->requestsToMe);
+        return $this->sentFriendRequests->merge($this->receivedFriendRequests);
     }
 }
